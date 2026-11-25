@@ -56,8 +56,8 @@ class StageSix(unittest.TestCase):
         }
         manifest.update(name="测试住宅", area_m2=95, color_plan=asset_ids[manifest["color_plan"]])
         manifest["facts"] = [
-            {"room": "测试空间", "fact": "浅色台面可见。", "image_ids": [item["id"]]}
-            for item in manifest["assets"] if item["adopted"]
+            {"room": f"测试空间 {index}", "fact": "浅色台面可见。", "image_ids": [item["id"]]}
+            for index, item in enumerate(manifest["assets"], 1) if item["adopted"]
         ]
         for entry in manifest["assets"]:
             entry["id"] = asset_ids[entry["id"]]
@@ -85,9 +85,45 @@ class StageSix(unittest.TestCase):
                     if slug == "atelier-warm" and i == 1:
                         self.assertIn(script["theme"], [n.get("value") for n in nodes])
                     if slug == "editorial-archive" and i in (6, 8):
-                        neighboring = script["pages"][i - 2]["image_ids"] + script["pages"][i]["image_ids"]
-                        self.assertIn(photos[1]["id"], neighboring)
+                        self.assertEqual([n["id"] for n in photos], page["image_ids"])
+                        self.assertEqual(photos[0]["box"][2:], (1342, 792))
                     if slug == "editorial-archive" and i == 9:
                         self.assertEqual(len({n["id"] for n in photos}), 5)
                         self.assertTrue(all(n["focus"] == (0.5, 0.5) for n in photos))
                         self.assertNotIn(manifest["color_plan"], [n["id"] for n in photos])
+
+        rooms = {fact["image_ids"][0]: fact["room"] for fact in manifest["facts"]}
+        companion = asset_ids["window-chair"]
+        excluded = asset_ids["framed-art"]
+        for i in (6, 8):
+            page = script["pages"][i - 1]
+            primary = page["image_ids"][0]
+            same_room = {
+                **manifest,
+                "facts": [
+                    {**fact, "room": rooms[primary]} if companion in fact["image_ids"] else fact
+                    for fact in manifest["facts"]
+                ],
+            }
+            pairings = (
+                ("same room", same_room, page, companion),
+                ("manifest pair", {**manifest, "archive_pairs": {str(i): companion}}, page, companion),
+                ("page companion", manifest, {**page, "companion": companion}, companion),
+                (
+                    "excluded or plan",
+                    {**manifest, "archive_pairs": {str(i): excluded}},
+                    {**page, "companion": manifest["color_plan"]},
+                    None,
+                ),
+                ("unclassified", {**manifest, "facts": []}, page, None),
+            )
+            for source, case, plate, expected in pairings:
+                with self.subTest(plate=i, source=source):
+                    _, nodes = compose("editorial-archive", i, plate, case, brand, script)
+                    photos = [node["id"] for node in nodes if node["kind"] == "photo"]
+                    self.assertEqual(photos, [primary, expected] if expected else [primary])
+                    if source == "same room":
+                        paired_rooms = {
+                            fact["room"] for fact in case["facts"] if fact["image_ids"][0] in photos
+                        }
+                        self.assertEqual(paired_rooms, {rooms[primary]})

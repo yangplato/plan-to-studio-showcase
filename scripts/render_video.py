@@ -82,7 +82,8 @@ def corner(cn, en, logo, paper):
     if paper:
         return layer
     shadow = Image.new("RGBA", layer.size)
-    shadow.putalpha(mask.filter(ImageFilter.MaxFilter(7)).filter(ImageFilter.GaussianBlur(5)))
+    shadow_mask = mask.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(3.5))
+    shadow.putalpha(shadow_mask.point(lambda a: round(a * 0.68)))
     shadow.alpha_composite(layer)
     return shadow
 

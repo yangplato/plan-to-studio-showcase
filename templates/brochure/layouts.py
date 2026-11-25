@@ -56,7 +56,6 @@ class Plate:
         self.heading = p["title"].replace("，", "　")
         self.note = p["body"]
         self.studio = b["name"].partition(" · ")[2]
-        self.pages = script.get("pages", [])
         self.assets = {a["id"] for a in m["assets"] if a["adopted"]}
         self.photos = [
             a["id"] for a in m["assets"] if a["adopted"] and a["id"] != m["color_plan"]
@@ -108,9 +107,19 @@ class Plate:
         if self.legacy and legacy in self.assets:
             return legacy
         current = set(self.p["image_ids"])
-        neighbors = self.pages[max(0, self.i - 2):self.i + 1]
-        nearby = [key for page in neighbors for key in page["image_ids"]]
-        return next((key for key in nearby + self.photos if key in self.photos and key not in current), None)
+        explicit = (
+            self.m.get("archive_pairs", {}).get(str(self.i)), self.p.get("companion")
+        )
+        for key in explicit:
+            if key in self.photos and key not in current:
+                return key
+        room = self.asset_rooms.get(self.p["image_ids"][0])
+        if room is None:
+            return None
+        return next(
+            (key for key in self.photos if key not in current and self.asset_rooms.get(key) == room),
+            None,
+        )
 
     def text(
         self,
@@ -438,6 +447,7 @@ def nocturne(d):
 
 def archive(d):
     i = d.i
+    secondary = d.secondary_photo() if i in (6, 8) else None
     d.ink = "#1E1C19"
     red = "#8E3A2A"
     d.effect("paper")
@@ -486,7 +496,7 @@ def archive(d):
         d.photo(1088, 279, 768, 512, 1)
         d.title(64, 837, 970, 43, ink_top=True)
         d.body(1088, 837, 768, ink_top=True)
-    elif i in (3, 5, 7):
+    elif i in (3, 5, 7) or (i in (6, 8) and secondary is None):
         x = 64 if i != 7 else 514
         d.photo(x, 110, 1342, 792)
         tx = 1460 if i != 7 else 64
@@ -494,10 +504,8 @@ def archive(d):
         d.title(tx, 524, 397, 34, lines=2)
         d.body(tx, 647, 377, 17)
     else:
-        asset = d.secondary_photo()
         d.photo(688, 136, 1168, 650)
-        if asset:
-            d.photo(64, 371, 568, 415, asset=asset)
+        d.photo(64, 371, 568, 415, asset=secondary)
         d.title(64, 832, 568, 36, ink_top=True)
         d.body(688, 832, 618, ink_top=True)
     return "#F1ECE1"

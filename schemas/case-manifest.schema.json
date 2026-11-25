@@ -261,6 +261,16 @@
       "minItems": 10,
       "maxItems": 10
     },
+    "archive_pairs": {
+      "type": "object",
+      "patternProperties": {
+        "^[68]$": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
+      },
+      "additionalProperties": false
+    },
     "materials": {
       "type": "array",
       "items": {

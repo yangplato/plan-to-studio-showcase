@@ -46,6 +46,10 @@
             "minItems": 1,
             "uniqueItems": true
           },
+          "companion": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
           "captions": {
             "type": "array",
             "minItems": 2,
