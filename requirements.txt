@@ -1,0 +1,7 @@
+Pillow
+jsonschema
+python-pptx
+edge-tts
+playwright
+numpy
+scipy

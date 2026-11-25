@@ -1,0 +1,16 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>空间画册 · 模板对比总览</title>
+<style>*{box-sizing:border-box}body{margin:0 auto;padding:28px 3vw;background:#f4f2ec;color:#28271f;font:16px/1.65 "Helvetica Neue","PingFang SC",sans-serif}h1{font:36px/1.4 Baskerville,"Songti SC",serif;margin:0 0 14px}nav{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:12px 0;border-block:1px solid #b5b0a1}button,select{font:inherit;padding:4px 12px;color:inherit;background:transparent;border:1px solid #888}button[aria-pressed=true]{background:#36382e;color:white}main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:20px 0}article img{display:block;width:100%}h2{font-size:19px;margin:8px 0 0}p{margin:3px 0}a{color:#62452e;margin-right:16px}main.single{max-width:1080px;margin-inline:auto;grid-template-columns:1fr}@media(max-width:700px){main{grid-template-columns:1fr}}</style>
+<h1>空间画册对比总览</h1><nav><button id="compare">同页四版</button><button id="book">单册纵览</button><select aria-label="选择图版或画册" id="choice"></select><a id="large">打开 4K 对照图</a></nav><main></main>
+<script>
+const data=/*CATALOG*/null;
+const main=document.querySelector('main'),choice=document.querySelector('select'),large=document.querySelector('#large');
+let single=false;
+function add(tag,parent,label){const e=document.createElement(tag);if(label)e.textContent=label;parent.append(e);return e}
+function paint(){main.replaceChildren();main.className=single?'single':'';const n=choice.selectedIndex;
+ const rows=single?data.pages.map(p=>[data.templates[n],p]):data.templates.map(t=>[t,data.pages[n]]);
+ for(const [t,p] of rows){const a=add('article',main);const img=add('img',a);img.src=t.slug+'/pages/'+p[0]+'.png';img.alt=t.name+' '+p[1];add('h2',a,single?p.join('　'):t.name);
+ if(!single||p===data.pages[0]){add('p',a,t.about);for(const ext of ['pdf','pptx','html'])add('a',a,ext.toUpperCase()).href=t.link+'.'+ext}}
+ large.hidden=single||data.templates.length!==4;large.href='comparison-4k/'+data.pages[single?0:n][0]+'.jpg'}
+function mode(b){single=b;choice.replaceChildren();(b?data.templates.map(t=>t.name):data.pages.map(p=>p.join('　'))).forEach(label=>add('option',choice,label));compare.setAttribute('aria-pressed',!b);book.setAttribute('aria-pressed',b);paint()}
+compare.onclick=()=>mode(false);book.onclick=()=>mode(true);choice.onchange=paint;mode(false)
+</script></html>

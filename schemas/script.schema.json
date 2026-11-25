@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "script",
+  "type": "object",
+  "properties": {
+    "theme": {
+      "type": "string",
+      "minLength": 1
+    },
+    "studio": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timing": {
+      "enum": [
+        "planned",
+        "recorded"
+      ]
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "body": {
+            "type": "string",
+            "minLength": 80,
+            "maxLength": 110
+          },
+          "image_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "captions": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "guide": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 26
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "body",
+          "image_ids"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "shots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "page_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "image_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "ambient_label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "narration": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "start_ms": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "end_ms": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "subtitles": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "start_ms": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "end_ms": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    },
+                    "required": [
+                      "text",
+                      "start_ms",
+                      "end_ms"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "text",
+                "start_ms",
+                "end_ms",
+                "subtitles"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "id",
+          "page_id",
+          "image_ids",
+          "ambient_label",
+          "narration"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "social": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "theme",
+    "studio",
+    "timing",
+    "pages",
+    "shots",
+    "social"
+  ],
+  "additionalProperties": false
+}

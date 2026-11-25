@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "brand",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subtitle_zh": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subtitle_en": {
+      "type": "string",
+      "minLength": 1
+    },
+    "logos": {
+      "type": "object",
+      "properties": {
+        "light": {
+          "type": "object",
+          "properties": {
+            "png": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^assets/brands/[a-z0-9-]+/logo-(dark|light)\\.png$"
+            },
+            "svg": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^assets/brands/[a-z0-9-]+/logo-(dark|light)\\.svg$"
+            }
+          },
+          "required": [
+            "png",
+            "svg"
+          ],
+          "additionalProperties": false
+        },
+        "dark": {
+          "type": "object",
+          "properties": {
+            "png": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^assets/brands/[a-z0-9-]+/logo-(dark|light)\\.png$"
+            },
+            "svg": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^assets/brands/[a-z0-9-]+/logo-(dark|light)\\.svg$"
+            }
+          },
+          "required": [
+            "png",
+            "svg"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "light",
+        "dark"
+      ],
+      "additionalProperties": false
+    },
+    "colors": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        },
+        "paper": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        },
+        "ink": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        },
+        "accent": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        }
+      },
+      "required": [
+        "primary",
+        "paper",
+        "ink",
+        "accent"
+      ],
+      "additionalProperties": false
+    },
+    "closing": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tts": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "enum": [
+            "edge-tts",
+            "minimax"
+          ]
+        },
+        "voice": {
+          "type": "string",
+          "minLength": 1
+        },
+        "alternative": {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "enum": [
+                "edge-tts",
+                "minimax"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "minLength": 1
+            },
+            "voice": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "provider",
+            "model",
+            "voice"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "provider",
+        "voice",
+        "alternative"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "name",
+    "subtitle_zh",
+    "subtitle_en",
+    "logos",
+    "colors",
+    "closing",
+    "tts"
+  ],
+  "additionalProperties": false
+}

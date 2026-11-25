@@ -1,0 +1,499 @@
+{
+  "name": "庭院自然居",
+  "area_m2": 105,
+  "layout": "三卧一卫 · 六席餐叙",
+  "color_plan": "color-plan",
+  "facts": [
+    {
+      "room": "材质",
+      "fact": "枝影落在木面上，几根细茎从灰褐色瓶口探出",
+      "image_ids": [
+        "cover-material"
+      ]
+    },
+    {
+      "room": "平面",
+      "fact": "从平面上看，长方餐桌夹在厨房与客厅之间，两条长边各排三把椅子",
+      "image_ids": [
+        "color-plan"
+      ]
+    },
+    {
+      "room": "客厅",
+      "fact": "从客厅望进去，视线先经过低茶几和浅色沙发，再抵达后方的餐桌",
+      "image_ids": [
+        "living-wide"
+      ]
+    },
+    {
+      "room": "客厅",
+      "fact": "单椅的后腿向外斜出，扶手的木边接住窗光",
+      "image_ids": [
+        "window-chair",
+        "woven-rug"
+      ]
+    },
+    {
+      "room": "客厅",
+      "fact": "木格栅从电视背后竖起，一道细长的火光横过下方的深色凹槽",
+      "image_ids": [
+        "tv-front"
+      ]
+    },
+    {
+      "room": "客厅",
+      "fact": "两层木搁板横过竖向格栅",
+      "image_ids": [
+        "shelf-objects"
+      ]
+    },
+    {
+      "room": "主卧",
+      "fact": "床靠在木色墙面前，床尾的浅色织毯垂向地面",
+      "image_ids": [
+        "bedroom-wide"
+      ]
+    },
+    {
+      "room": "主卧",
+      "fact": "近看床头背后的木面，深色细纹自上而下延伸，几块板之间留下笔直的接缝",
+      "image_ids": [
+        "headboard-grain"
+      ]
+    },
+    {
+      "room": "主卧",
+      "fact": "陶土色靠枕压在橄榄绿床品前，枕面的折痕把同一种颜色分成明暗几层",
+      "image_ids": [
+        "clay-cushions",
+        "knit-throw"
+      ]
+    },
+    {
+      "room": "主卧",
+      "fact": "最后一个近景留给衣柜",
+      "image_ids": [
+        "wardrobe"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "id": "bedroom-shelf",
+      "raw": "raw/bedroom-shelf.jpg",
+      "sha256": "a14e06a8139ee69620010a60b8d2b551445003fba6664267856c11a167528f7b",
+      "dhash": "d5d7c3cef6e6f3c1",
+      "size": [
+        1835,
+        1024
+      ],
+      "crop_box": [
+        0,
+        0,
+        1835,
+        1024
+      ],
+      "adopted": false,
+      "reason": "器物搁板已在客厅专页展开，此角度分散床头木纹的重点。",
+      "candidates": [],
+      "output": null,
+      "output_size": null,
+      "scale": 1
+    },
+    {
+      "id": "bedroom-wide",
+      "raw": "raw/bedroom-wide.jpg",
+      "sha256": "6d5149019ccc517dd09d3a9414dd764f4b26dcc8407dcc79a05465ebf84fe494",
+      "dhash": "0f8ecc2c0c160e07",
+      "size": [
+        5504,
+        3072
+      ],
+      "crop_box": [
+        0,
+        0,
+        5504,
+        3072
+      ],
+      "adopted": true,
+      "reason": null,
+      "candidates": [],
+      "output": "assets/4k/bedroom-wide.png",
+      "output_size": [
+        5504,
+        3072
+      ],
+      "scale": 1
+    },
+    {
+      "id": "clay-cushions",
+      "raw": "raw/clay-cushions.jpg",
+      "sha256": "dfd04f2659d0535b6bd4ae1e1bfc95ed106e1c9fceca507174a2b77a08dc0347",
+      "dhash": "8b4acb8d8e888d89",
+      "size": [
+        1835,
+        1024
+      ],
+      "crop_box": [
+        99,
+        60,
+        1735,
+        964
+      ],
+      "adopted": true,
+      "reason": null,
+      "candidates": [],
+      "output": "assets/4k/clay-cushions.png",
+      "output_size": [
+        6544,
+        3616
+      ],
+      "scale": 4
+    },
+    {
+      "id": "color-plan",
+      "raw": "raw/color-plan.png",
+      "sha256": "9451d6c4e76beaf2f496355b18c820fd469efcfbe8bff4380ef9905c9e3760ce",
+      "dhash": "7cbc34a4e8bcb4e4",
+      "size": [
+        1050,
+        1498
+      ],
+      "crop_box": [
+        2,
+        0,
+        1050,
+        1498
+      ],
+      "adopted": true,
+      "reason": null,
+      "candidates": [],
+      "output": "assets/4k/color-plan.png",
+      "output_size": [
+        4192,
+        5992
+      ],
+      "scale": 4
+    },
+    {
+      "id": "cover-material",
+      "raw": "raw/cover-material.png",
+      "sha256": "bc3d25d888e03e10e8616278e1f2f984c142a8564901865dacb38241db407bb3",
+      "dhash": "e767ab876a6ce9c1",
+      "size": [
+        1536,
+        1024
+      ],
+      "crop_box": [
+        0,
+        0,
+        1536,
+        1024
+      ],
+      "adopted": true,
+      "reason": null,
+      "candidates": [],
+      "output": "assets/4k/cover-material.png",
+      "output_size": [
+        6144,
+        4096
+      ],
+      "scale": 4
+    },
+    {
+      "id": "framed-art",
+      "raw": "raw/framed-art.jpg",
+      "sha256": "4298a0db1f5fe7a8e6cdf454e68f3c21817456927959118222138d8b11c540d3",
+      "dhash": "1c18585868785969",
+      "size": [
+        1835,
+        1024
+      ],
+      "crop_box": [
+        0,
+        0,
+        1835,
+        1024
+      ],
+      "adopted": false,
+      "reason": "挂画与下页书架同一背景，选保留书本与器物的横向构图。",
+      "candidates": [],
+      "output": null,
+      "output_size": null,
+      "scale": 1
+    },
+    {
+      "id": "headboard-grain",
+      "raw": "raw/headboard-grain.jpg",
+      "sha256": "41352c39f424b97f2a90c3ef9ebc898ab1a6f1f9c998fa374fcb1f40097d87d6",
+      "dhash": "3f9a4e2622220202",
+      "size": [
+        1835,
+        1024
+      ],
+      "crop_box": [
+        102,
+        119,
+        1732,
+        1020
+      ],
+      "adopted": true,
+      "reason": null,
+      "candidates": [],
+      "output": "assets/4k/headboard-grain.png",
+      "output_size": [
+        6520,
+        3604
+      ],
+      "scale": 4
+    },
+    {
+      "id": "hearth-stone",
+      "raw": "raw/hearth-stone.jpg",
+      "sha256": "c87f0ffcdd636f2e64dbc6018ba06762cc315a164433e78ca245f7345710c025",
+      "dhash": "2b63676767ccca0a",
+      "size": [
+        1835,
+        1024
+      ],
+      "crop_box": [
+        0,
+        0,
+        1835,
+        1024
+      ],
+      "adopted": false,
+      "reason": "低机位侧重地坪，壁炉火线在正面镜头更完整。",
+      "candidates": [],
+      "output": null,
+      "output_size": null,
+      "scale": 1
+    },
+    {
+      "id": "knit-throw",
+      "raw": "raw/knit-throw.jpg",
+      "sha256": "481c57d6ed15588c0a9d7fbc67956f0b9755e30eb8e277bb12fd690509ce0a00",
+      "dhash": "35444e1e16064e26",
+      "size": [
+        1835,
+        1024
+      ],
+      "crop_box": [
+        4,
+        4,
+        1542,
+        856
+      ],
+      "adopted": true,
+      "reason": null,
+      "candidates": [],
+      "output": "assets/4k/knit-throw.png",
+      "output_size": [
+        6152,
+        3408
+      ],
+      "scale": 4
+    },
+    {
+      "id": "line-plan",
+      "raw": "raw/line-plan.png",
+      "sha256": "f6a0d682e170ed99f75f140f9d293624d1c76d888d676df40c388a487ccff85b",
+      "dhash": "28a822a799c8f0f0",
+      "size": [
+        3394,
+        4847
+      ],
+      "crop_box": [
+        0,
+        0,
+        3394,
+        4847
+      ],
+      "adopted": false,
+      "reason": "线稿仅用于核对平面，画册采用彩平。",
+      "candidates": [],
+      "output": null,
+      "output_size": null,
+      "scale": 1
+    },
+    {
+      "id": "living-wide",
+      "raw": "raw/living-wide.jpg",
+      "sha256": "988ddb601f790f8ffe6deb0a7b0af5a62043000f8dcb7b9b988dab73ace8f91e",
+      "dhash": "0d8961abeb63e219",
+      "size": [
+        5504,
+        3072
+      ],
+      "crop_box": [
+        0,
+        0,
+        5504,
+        3072
+      ],
+      "adopted": true,
+      "reason": null,
+      "candidates": [],
+      "output": "assets/4k/living-wide.png",
+      "output_size": [
+        5504,
+        3072
+      ],
+      "scale": 1
+    },
+    {
+      "id": "shelf-objects",
+      "raw": "raw/shelf-objects.jpg",
+      "sha256": "03ef2997e00652022a8aa001c9d7e7354a7117d538ce73f268335ac99d186d3f",
+      "dhash": "1101b12565513390",
+      "size": [
+        1835,
+        1024
+      ],
+      "crop_box": [
+        8,
+        8,
+        1827,
+        1016
+      ],
+      "adopted": true,
+      "reason": null,
+      "candidates": [],
+      "output": "assets/4k/shelf-objects.png",
+      "output_size": [
+        3638,
+        2016
+      ],
+      "scale": 2
+    },
+    {
+      "id": "tv-front",
+      "raw": "raw/tv-front.jpg",
+      "sha256": "229df5badf49e1080d3f7f98572300b634e5de32621aa537f3745b155c0737d5",
+      "dhash": "616569696147ce8c",
+      "size": [
+        1835,
+        1024
+      ],
+      "crop_box": [
+        8,
+        8,
+        1827,
+        1016
+      ],
+      "adopted": true,
+      "reason": null,
+      "candidates": [],
+      "output": "assets/4k/tv-front.png",
+      "output_size": [
+        3638,
+        2016
+      ],
+      "scale": 2
+    },
+    {
+      "id": "tv-oblique",
+      "raw": "raw/tv-oblique.jpg",
+      "sha256": "e0bb6d3a86fe6e0b1d82bd5e5b61c32ba18ab5b13ccb58efb42d0c197b0363fb",
+      "dhash": "13d919199999178c",
+      "size": [
+        1835,
+        1024
+      ],
+      "crop_box": [
+        0,
+        0,
+        1835,
+        1024
+      ],
+      "adopted": false,
+      "reason": "重复全景中的电视与搁板关系，右侧屏幕挤压器物。",
+      "candidates": [],
+      "output": null,
+      "output_size": null,
+      "scale": 1
+    },
+    {
+      "id": "wardrobe",
+      "raw": "raw/wardrobe.jpg",
+      "sha256": "0f847b6745369938e48f99f17acd7a626e1f5403efd7884efb2ce13a2b0c7780",
+      "dhash": "7f7f7f7f7f3f3f3f",
+      "size": [
+        1835,
+        1024
+      ],
+      "crop_box": [
+        4,
+        119,
+        1540,
+        1020
+      ],
+      "adopted": true,
+      "reason": null,
+      "candidates": [],
+      "output": "assets/4k/wardrobe.png",
+      "output_size": [
+        6144,
+        3604
+      ],
+      "scale": 4
+    },
+    {
+      "id": "window-chair",
+      "raw": "raw/window-chair.jpg",
+      "sha256": "9ea10149fa865478788dcb00b406e0063e5b7cb3dc09eaa434aa9605fdff42e2",
+      "dhash": "495adac1748e8f43",
+      "size": [
+        1835,
+        1024
+      ],
+      "crop_box": [
+        8,
+        8,
+        1827,
+        1016
+      ],
+      "adopted": true,
+      "reason": null,
+      "candidates": [],
+      "output": "assets/4k/window-chair.png",
+      "output_size": [
+        3638,
+        2016
+      ],
+      "scale": 2
+    },
+    {
+      "id": "woven-rug",
+      "raw": "raw/woven-rug.jpg",
+      "sha256": "a6d912e405264097a0a427d2b1a172369cd608b1176097492f7e4ecd087b5c38",
+      "dhash": "83306a283b5bf874",
+      "size": [
+        1835,
+        1024
+      ],
+      "crop_box": [
+        8,
+        8,
+        1827,
+        1016
+      ],
+      "adopted": true,
+      "reason": null,
+      "candidates": [],
+      "output": "assets/4k/woven-rug.png",
+      "output_size": [
+        3638,
+        2016
+      ],
+      "scale": 2
+    }
+  ],
+  "palette": [
+    "#976E52",
+    "#C7A283",
+    "#44281F",
+    "#5E4337",
+    "#7C5139"
+  ]
+}

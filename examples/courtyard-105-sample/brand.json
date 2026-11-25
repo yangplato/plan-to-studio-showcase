@@ -1,0 +1,31 @@
+{
+  "name": "栖木设计事务所 · ATELIER QIMU",
+  "subtitle_zh": "住宅空间设计",
+  "subtitle_en": "Residential Interiors",
+  "logos": {
+    "dark": {
+      "svg": "assets/brands/atelier-qimu/logo-dark.svg",
+      "png": "assets/brands/atelier-qimu/logo-dark.png"
+    },
+    "light": {
+      "svg": "assets/brands/atelier-qimu/logo-light.svg",
+      "png": "assets/brands/atelier-qimu/logo-light.png"
+    }
+  },
+  "colors": {
+    "primary": "#34382C",
+    "paper": "#F4EFE5",
+    "ink": "#282A24",
+    "accent": "#B08D57"
+  },
+  "closing": "栖木设计，让每一寸木色与光线，安放你的日常。",
+  "tts": {
+    "provider": "edge-tts",
+    "voice": "zh-CN-YunyangNeural",
+    "alternative": {
+      "provider": "minimax",
+      "model": "speech-2.8-hd",
+      "voice": "Chinese_gravelly_storyteller_nv1"
+    }
+  }
+}
