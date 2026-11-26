@@ -24,7 +24,7 @@ from playwright.sync_api import sync_playwright
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import MSO_AUTO_SIZE, PP_ALIGN
+from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN
 from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Emu, Pt
 from jsonschema import validate
@@ -50,6 +50,7 @@ body { margin:0; font-family:Baskerville,"Songti SC",serif; line-height:1.8; }
 .slide:last-child {break-after:auto}
 .slide>* {position:absolute;margin:0;padding:0;font-weight:400}
 .text {line-break:strict;word-break:normal;text-autospace:normal}
+.plan-dot {border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.22)}
 sup {font-size:.55em;vertical-align:baseline;position:relative;top:-.48em;line-height:0}
 @media print { * {print-color-adjust:exact;-webkit-print-color-adjust:exact} }
 """
@@ -301,6 +302,95 @@ def render_slide(prs, page, paper, nodes, sources, media, browser):
             parts.append(
                 f'<img data-kind="{kind}" alt="{n["id"]}" style="{pos}" src="media/{name}">'
             )
+            if kind == "photo" and n.get("callouts"):
+                with Image.open(sources[n["id"]]) as src_im:
+                    sw, sh = src_im.size
+                scale = min(w / sw, h / sh)
+                fw, fh = sw * scale, sh * scale
+                ox, oy = x + (w - fw) / 2, y + (h - fh) / 2
+                dot_c, line_c, txt_c, halo_c = n.get(
+                    "callout_style", ("#8E3A2A", "#9B8E7C", "#2B2721", "#F2ECE1")
+                )
+                dot_d = 9
+                lbl_w, lbl_h, lbl_sz = 156, 26, 15
+                css_f, ea_f, lat_f = FONTS["sans"]
+                for side in ("left", "right"):
+                    group = [
+                        pt for pt in n["callouts"]
+                        if (pt.get("side") or ("left" if pt["x"] < 0.45 else "right")) == side
+                    ]
+                    group.sort(key=lambda pt: pt["y"])
+                    last_y = -999
+                    for pt in group:
+                        cx = ox + pt["x"] * fw
+                        cy = oy + pt["y"] * fh
+                        ly = max(cy, last_y + 42)
+                        last_y = ly
+                        if side == "left":
+                            edge_x = max(x + lbl_w + 18, ox - 24)
+                            lx0, lw = edge_x, max(12, cx - edge_x)
+                            tx = edge_x - 10 - lbl_w
+                            align = "right"
+                            pp_align = PP_ALIGN.RIGHT
+                        else:
+                            edge_x = min(x + w - lbl_w - 18, ox + fw + 24)
+                            lx0, lw = cx, max(12, edge_x - cx)
+                            tx = edge_x + 10
+                            align = "left"
+                            pp_align = PP_ALIGN.LEFT
+                        # 1) Fine leader line
+                        lx0, ly0, lw = round(lx0, 1), round(cy - 0.5, 1), round(lw, 1)
+                        l_coords = [Emu(round(v * 6350)) for v in (lx0, ly0, lw, 1.2)]
+                        line_sh = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, *l_coords)
+                        line_sh.name = f"leader-{pt['index']:02}"
+                        line_sh.fill.solid()
+                        line_sh.fill.fore_color.rgb = rgb(line_c)
+                        line_sh.line.fill.background()
+                        parts.append(
+                            f'<div data-kind="leader" style="left:{lx0}px;top:{ly0}px;width:{lw}px;height:1.2px;background:{line_c}"></div>'
+                        )
+                        # 2) Tiny anchor dot on the floorplan
+                        dx, dy = round(cx - dot_d / 2, 1), round(cy - dot_d / 2, 1)
+                        d_coords = [Emu(round(v * 6350)) for v in (dx, dy, dot_d, dot_d)]
+                        dot_sh = slide.shapes.add_shape(MSO_SHAPE.OVAL, *d_coords)
+                        dot_sh.name = f"dot-{pt['index']:02}"
+                        dot_sh.fill.solid()
+                        dot_sh.fill.fore_color.rgb = rgb(dot_c)
+                        dot_sh.line.color.rgb = rgb(halo_c)
+                        dot_sh.line.width = Emu(round(1.5 * 6350))
+                        parts.append(
+                            f'<div class="plan-dot" data-kind="dot" style="left:{dx}px;top:{dy}px;width:{dot_d}px;height:{dot_d}px;background:{dot_c};border:1.5px solid {halo_c}"></div>'
+                        )
+                        # 3) Clean editable callout label outside the floorplan
+                        tx, ty = round(tx, 1), round(ly - lbl_h / 2, 1)
+                        lbl_text = pt["label"]
+                        lbl_style = (
+                            f"left:{tx}px;top:{ty}px;width:{lbl_w}px;height:{lbl_h}px;"
+                            f"font-family:{css_f};font-size:{lbl_sz}px;line-height:1.32;color:{txt_c};"
+                            f"font-weight:400;letter-spacing:0.06em;text-align:{align};"
+                        )
+                        parts.append(
+                            f'<div class="text callout" data-axis="{tx}" data-shift="0" style="{escape(lbl_style)}">{escape(lbl_text)}</div>'
+                        )
+                        t_coords = [Emu(round(v * 6350)) for v in (tx, ty, lbl_w, lbl_h)]
+                        tb = slide.shapes.add_textbox(*t_coords)
+                        tb.name = f"callout-{pt['index']:02}"
+                        tf = tb.text_frame
+                        tf.word_wrap = False
+                        tf.auto_size = MSO_AUTO_SIZE.NONE
+                        tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+                        tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+                        p_lbl = tf.paragraphs[0]
+                        p_lbl.alignment = pp_align
+                        p_lbl.line_spacing = Pt(lbl_sz * 1.32 * 0.75)
+                        r_lbl = p_lbl.add_run()
+                        r_lbl.text = lbl_text
+                        r_lbl.font.name = lat_f
+                        r_lbl.font.size = Pt(lbl_sz * 0.75)
+                        r_lbl.font.color.rgb = rgb(txt_c)
+                        ea_el = OxmlElement("a:ea")
+                        ea_el.set("typeface", ea_f)
+                        r_lbl._r.get_or_add_rPr().append(ea_el)
         elif kind == "logo":
             path = ROOT / n["path"]
             svg = ET.parse(path).getroot()

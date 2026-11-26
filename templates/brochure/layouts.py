@@ -10,6 +10,14 @@ THEMES = {
 }
 ROOMS = ("玄关厨房", "六席餐区", "客厅", "卧室一", "卧室二", "主卧套房")
 ROUTE = ("玄关与厨房", "六席餐桌居中", "沿窗起居厅", "主卧床尾长案", "两间次卧", "共用卫浴")
+PLAN_POINTS = (
+    {"index": 1, "label": "玄关厨房", "x": 0.55, "y": 0.13, "keywords": ["厨房", "玄关", "添碗饭"]},
+    {"index": 2, "label": "六席餐区", "x": 0.61, "y": 0.255, "keywords": ["长桌", "餐桌", "两边各坐", "一桌人"]},
+    {"index": 3, "label": "客厅", "x": 0.60, "y": 0.48, "keywords": ["客厅", "沙发", "起居"]},
+    {"index": 4, "label": "卧室一", "x": 0.235, "y": 0.52, "keywords": ["次卧", "卧室一"]},
+    {"index": 5, "label": "卧室二", "x": 0.27, "y": 0.82, "keywords": ["卧室二"]},
+    {"index": 6, "label": "主卧套房", "x": 0.68, "y": 0.77, "keywords": ["主卧", "套房"]},
+)
 SECTIONS = (
     "STILL LIFE",
     "FLOOR PLAN",
@@ -67,8 +75,15 @@ class Plate:
         # Keep the original art direction for manifests with the original plates.
         self.legacy = {row[0] for row in MATERIALS}.union(ARCHIVE_SECONDS.values()) <= self.assets
         rooms = list(dict.fromkeys(f["room"] for f in m["facts"]))
-        self.rooms = m.get("rooms") or (ROOMS if self.legacy else rooms[:6])
-        self.route = m.get("route") or (ROUTE if self.legacy else self.rooms)
+        self.plan_points = list(m.get("plan_points") or (PLAN_POINTS if self.legacy else []))
+        self.rooms = m.get("rooms") or (
+            [pt["label"] for pt in self.plan_points] if self.plan_points else (ROOMS if self.legacy else rooms[:6])
+        )
+        self.route = m.get("route") or (
+            [f"{pt['index']:02}   {pt['label']}" for pt in self.plan_points]
+            if self.plan_points
+            else (ROUTE if self.legacy else self.rooms)
+        )
         sections = m.get("sections") or (SECTIONS if self.legacy else None)
         if sections:
             self.section = sections[i - 1]
@@ -177,18 +192,21 @@ class Plate:
         self.nodes.append(dict(kind="rect", box=(x, y, w, h), color=color))
 
     def photo(
-        self, x, y, w, h, j=0, *, asset=None, mat=None, focus=(0.5, 0.5), sample=None
+        self, x, y, w, h, j=0, *, asset=None, mat=None, focus=(0.5, 0.5), sample=None, callout_style=None
     ):
-        self.nodes.append(
-            dict(
-                kind="photo",
-                box=(x, y, w, h),
-                id=asset or self.p["image_ids"][j],
-                focus=focus,
-                mat=mat,
-                sample=sample,
-            )
+        asset_id = asset or self.p["image_ids"][j]
+        node = dict(
+            kind="photo",
+            box=(x, y, w, h),
+            id=asset_id,
+            focus=focus,
+            mat=mat,
+            sample=sample,
         )
+        if asset_id == self.m["color_plan"] and self.plan_points and callout_style is not False:
+            node["callouts"] = self.plan_points
+            node["callout_style"] = callout_style or ("#8E3A2A", "#9B8E7C", "#2B2721", "#F2ECE1")
+        self.nodes.append(node)
 
     def effect(self, name, x=0, y=0, w=1920, h=1080):
         self.nodes.append(dict(kind="effect", id=name, box=(x, y, w, h)))
@@ -237,12 +255,20 @@ def atelier(d):
         d.text(d.theme, 96, 669, 600, 20)
         d.imprint(96, 966, 590, True)
     elif i == 2:
-        d.photo(96, 64, 1044, 952, mat=paper)
+        d.photo(96, 64, 1044, 952, mat=paper, callout_style=("#8E3A2A", "#9B8E7C", "#2B2721", paper))
         d.rect(1236, 125, 1, 830, "#D8CEC0")
-        d.eyebrow(1300, 181)
-        d.title(1300, 264, 580, 42)
-        d.body(1300, 369, 500)
-        d.index(1300, 582, 460)
+        if d.plan_points:
+            d.eyebrow(1300, 260)
+            d.text(d.area, 1300, 315, 500, 56, weight=300)
+            d.text(d.m["layout"], 1300, 398, 500, 21, color="#6B6052")
+            d.rect(1300, 456, 48, 1, "#B8AA95")
+            d.title(1300, 492, 560, 42)
+            d.body(1300, 592, 500)
+        else:
+            d.eyebrow(1300, 181)
+            d.title(1300, 264, 580, 42)
+            d.body(1300, 369, 500)
+            d.index(1300, 582, 460)
     elif i in (3, 7):
         d.photo(0, 0, 1920, 1080)
         d.effect("bottom", 0, 660, 1920, 420)
@@ -314,12 +340,19 @@ def swiss(d):
         d.text(d.m["name"], 72, 736, 850, 59, weight=500)
         d.imprint(72, 952, 700)
     elif i == 2:
-        d.photo(672, 72, 1176, 936, mat="#F7F6F2")
+        d.photo(672, 72, 1176, 936, mat="#F7F6F2", callout_style=("#E0451F", "#8C8881", "#111111", "#F7F6F2"))
         d.eyebrow(72, 72)
-        d.text(d.m["layout"], 72, 214, 580, 48, weight=300)
-        d.title(72, 430, 600, 40)
-        d.body(72, 524, 540)
-        d.index(72, 755, 576)
+        if d.plan_points:
+            d.text(d.area, 72, 210, 540, 78, weight=300)
+            d.text(d.m["layout"], 72, 326, 560, 34, weight=300, color="#5A5751")
+            d.rect(72, 408, 48, 2, "#E0451F")
+            d.title(72, 456, 560, 40)
+            d.body(72, 550, 540)
+        else:
+            d.text(d.m["layout"], 72, 214, 580, 48, weight=300)
+            d.title(72, 430, 600, 40)
+            d.body(72, 524, 540)
+            d.index(72, 755, 576)
     elif i == 3:
         d.photo(0, 0, 1920, 700)
         number(72, 780, ink_top=True)
@@ -412,7 +445,7 @@ def nocturne(d):
             d.quote(d.guides(("低茶几与浅色沙发放低了重心，沿窗的树影尽收眼底。","木扶手单椅转向沙发，窗边的人也在谈话的圈子里。") if i == 3 else ("客厅的木色延续到床头，床尾长案接住窗边的光。","细腿让案下的光影连成一片，绿意有了舒展的背景。")), x, 923, 760)
     elif i == 2:
         d.effect("spot")
-        d.photo(176, 72, 1040, 936, mat="transparent")
+        d.photo(176, 72, 1040, 936, mat="transparent", callout_style=(brass, "#8B7350", "#ECE4D6", "#1D1814"))
         d.rect(1300, 399, 60, 1, brass)
         d.eyebrow(1300, 431, 560)
         d.title(1300, 489, 596, 35, spacing=0.18)
@@ -470,10 +503,17 @@ def archive(d):
                                 box=(64 + 55 * j, 924, 48, 24)))
     elif i == 2:
         d.text("空间索引", 64, 160, 600, 52)
-        d.index(64, 320, 560, [f"{j:02}     {room}" for j, room in enumerate(d.rooms, 1)])
-        d.body(64, 605, 535)
-        d.text(d.area, 64, 844, 570, 55)
-        d.photo(808, 92, 1048, 892, mat="clear")
+        if d.plan_points:
+            d.text(d.area, 64, 275, 570, 58)
+            d.text(d.m["layout"], 64, 368, 570, 22, color="#6A6359")
+            d.rect(64, 434, 48, 1, red)
+            d.title(64, 474, 570, 36)
+            d.body(64, 568, 535)
+        else:
+            d.index(64, 320, 560, [f"{j:02}     {room}" for j, room in enumerate(d.rooms, 1)])
+            d.body(64, 605, 535)
+            d.text(d.area, 64, 844, 570, 55)
+        d.photo(808, 92, 1048, 892, mat="clear", callout_style=(red, "#8F877B", "#1E1C19", "#F1ECE1"))
     elif i == 9:
         d.text("材料采样", 168, 91, 800, 40, weight=600)
         detail = "木纹、石纹与三种织物，采自本案实景。" if d.legacy else "从本案采用的效果图中截取细节。"

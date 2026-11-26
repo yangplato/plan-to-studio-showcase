@@ -14,6 +14,11 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter
 from build_brochure import mount_plan
 from master_audio import master
 from synthesize_voice import BRAND, CASE, ROOT, copy_text, read
+import sys
+
+if str(ROOT / "templates/brochure") not in sys.path:
+    sys.path.insert(0, str(ROOT / "templates/brochure"))
+from layouts import PLAN_POINTS as LEGACY_PLAN_POINTS
 
 SIZE = (3840, 2160)
 FPS = 30
@@ -239,6 +244,182 @@ def subtitle(im, text, i, paper=False):
     im.paste(layer, (x, 1872), layer)
 
 
+def plan_points_for(manifest):
+    if manifest.get("plan_points"):
+        return list(manifest["plan_points"])
+    ids = {a["id"] for a in manifest["assets"] if a["adopted"]}
+    if {"living-wide", "tv-front", "bedroom-wide"} <= ids:
+        return list(LEGACY_PLAN_POINTS)
+    return []
+
+
+def plan_rect(case, manifest):
+    asset = next(
+        a for a in manifest["assets"] if a["adopted"] and a["id"] == manifest["color_plan"]
+    )
+    with Image.open(case / asset["output"]) as src:
+        sw, sh = src.size
+    scale = min(1950 / sw, 1950 / sh, 1.0)
+    pw, ph = round(sw * scale), round(sh * scale)
+    return (2320 - pw) // 2, (2160 - ph) // 2, pw, ph
+
+
+def plan_activations(points, timeline, start_f, end_f, narr):
+    if not points:
+        return []
+    if not narr:
+        span = max(1, end_f - start_f)
+        seq = points[: min(3, len(points))]
+        step = max(24, (span - 45) // max(1, len(seq)))
+        return [
+            (start_f + 36 + k * step, min(end_f, start_f + 36 + (k + 1) * step), pt["index"])
+            for k, pt in enumerate(seq)
+        ]
+    events = []
+    for sub in timeline["subtitles"]:
+        a = math.ceil(sub["start_ms"] * FPS / 1000)
+        b = math.ceil(sub["end_ms"] * FPS / 1000)
+        if b <= start_f or a >= end_f:
+            continue
+        text = sub["text"]
+        hits = []
+        for pt in points:
+            keys = [pt["label"], *pt.get("keywords", ())]
+            pos = min((text.find(k) for k in keys if k and k in text), default=-1)
+            if pos >= 0:
+                hits.append((pos, pt["index"]))
+        hits.sort()
+        seen = []
+        for _, idx in hits:
+            if idx not in seen:
+                seen.append(idx)
+        if not seen:
+            continue
+        seg = max(1, (b - a) // len(seen))
+        for k, idx in enumerate(seen):
+            sa = max(start_f, a + k * seg)
+            sb = min(end_f, b if k == len(seen) - 1 else a + (k + 1) * seg)
+            if events and events[-1][2] == idx:
+                events[-1] = (events[-1][0], max(events[-1][1], sb), idx)
+            else:
+                events.append((sa, sb, idx))
+    return events
+
+
+def _ease_out(v):
+    v = min(1.0, max(0.0, v))
+    return 1.0 - (1.0 - v) ** 3
+
+
+def _smooth(v):
+    v = min(1.0, max(0.0, v))
+    return v * v * (3.0 - 2.0 * v)
+
+
+def _mix_rgb(c0, c1, t):
+    return tuple(round(a + (b - a) * t) for a, b in zip(c0, c1))
+
+
+def draw_plan_interaction(im, rect, points, activations, frame_idx, start_f):
+    if not points:
+        return
+    ox, oy, pw, ph = rect
+    pos = {pt["index"]: (ox + pt["x"] * pw, oy + pt["y"] * ph) for pt in points}
+    layer = Image.new("RGBA", SIZE, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(layer)
+    accent = (169, 57, 27)
+    ink_rgb = (43, 39, 33)
+    muted_line = (145, 134, 118)
+    paper_rgb = (243, 238, 228)
+
+    # Track per-point activation progress (smooth enter/exit, zero snapping) and route path.
+    visited_since = {}
+    focus = {}
+    prev_idx = None
+    for ev_a, ev_b, idx in activations:
+        if frame_idx >= ev_a:
+            visited_since.setdefault(idx, ev_a)
+            if prev_idx is not None and prev_idx != idx:
+                p0, p1 = pos[prev_idx], pos[idx]
+                prog = _smooth((frame_idx - ev_a) / 16.0)
+                mx = p0[0] + (p1[0] - p0[0]) * prog
+                my = p0[1] + (p1[1] - p0[1]) * prog
+                draw.line((p0[0], p0[1], mx, my), fill=(*accent, 38), width=11)
+                draw.line((p0[0], p0[1], mx, my), fill=(*accent, 190), width=3)
+                if 0.02 < prog < 0.98:
+                    draw.ellipse((mx - 7, my - 7, mx + 7, my + 7), fill=(*accent, 220), outline=(*paper_rgb, 230), width=2)
+            enter = _ease_out((frame_idx - ev_a) / 10.0)
+            leave = 1.0 - _smooth((frame_idx - (ev_b + 6)) / 10.0) if frame_idx > ev_b + 6 else 1.0
+            weight = max(0.0, min(1.0, enter * leave))
+            if weight > focus.get(idx, (0.0, 0))[0]:
+                focus[idx] = (weight, frame_idx - ev_a)
+            prev_idx = idx
+
+    lbl_font = font(34, True)
+    lbl_active_font = font(36, True)
+    left_edge = max(360, ox - 58)
+    right_edge = min(2005, ox + pw + 58)
+    for k, pt in enumerate(points):
+        idx = pt["index"]
+        cx, cy = pos[idx]
+        reveal = _ease_out((frame_idx - (start_f + 10 + k * 4)) / 12.0)
+        if reveal <= 0:
+            continue
+        side = pt.get("side") or ("left" if pt["x"] < 0.45 else "right")
+        edge_x = left_edge if side == "left" else right_edge
+        w_act, act_age = focus.get(idx, (0.0, 0))
+        vis_a = visited_since.get(idx)
+
+        # 1) Base hairline smoothly extends outward during shot intro.
+        base_prog = _ease_out((frame_idx - (start_f + 12 + k * 4)) / 16.0)
+        ex_base = cx + (edge_x - cx) * base_prog
+        draw.line((cx, cy, ex_base, cy), fill=(*muted_line, round(115 * reveal)), width=2)
+
+        # 2) Terracotta accent stroke glides smoothly from dot outward to margin on activation.
+        if vis_a is not None:
+            sweep = _ease_out((frame_idx - vis_a) / 13.0)
+            ex_acc = cx + (edge_x - cx) * min(base_prog, sweep)
+            acc_alpha = round((135 + 105 * w_act) * reveal)
+            acc_width = 3 if w_act > 0.35 else 2
+            draw.line((cx, cy, ex_acc, cy), fill=(*accent, acc_alpha), width=acc_width)
+            if 0.04 < sweep < 0.96:
+                draw.ellipse((ex_acc - 5, cy - 5, ex_acc + 5, cy + 5), fill=(*accent, 235))
+
+        # 3) Tiny anchor dot with soft breathing halo when active.
+        r = round(8.0 + 4.0 * w_act + (1.0 if vis_a is not None and w_act < 0.1 else 0.0))
+        alpha = round(255 * reveal)
+        if w_act > 0.02:
+            pulse = 1.0 + 0.14 * math.sin(act_age * 0.24)
+            hr = round((22 + 10 * w_act) * pulse)
+            draw.ellipse((cx - hr, cy - hr, cx + hr, cy + hr), fill=(*accent, round(52 * w_act * reveal)))
+            rr = round((16 + 6 * w_act) * pulse)
+            draw.ellipse((cx - rr, cy - rr, cx + rr, cy + rr), outline=(*accent, round(155 * w_act * reveal)), width=2)
+        dot_rgb = _mix_rgb(ink_rgb, accent, 1.0 if vis_a is not None else w_act)
+        draw.ellipse((cx - r, cy - r, cx + r, cy + r), fill=(*dot_rgb, alpha), outline=(*paper_rgb, alpha), width=3)
+
+        # 4) Margin label fades & gently slides into place; smoothly transitions to terracotta + underline.
+        if base_prog > 0.3:
+            tfade = _ease_out((base_prog - 0.3) / 0.7)
+            slide = (1.0 - tfade) * (10 if side == "right" else -10)
+            f_use = lbl_active_font if w_act > 0.5 else lbl_font
+            t_rgb = _mix_rgb(ink_rgb, accent, w_act)
+            t_alpha = round((155 + (70 if vis_a is not None else 0) + 100 * w_act) * tfade)
+            t_alpha = min(255, t_alpha)
+            tx = (edge_x - 20 if side == "left" else edge_x + 20) + slide
+            anchor = "rm" if side == "left" else "lm"
+            draw.text((tx, cy), pt["label"], font=f_use, fill=(*t_rgb, t_alpha), anchor=anchor)
+            if w_act > 0.05 and vis_a is not None:
+                u_prog = _ease_out((frame_idx - (vis_a + 6)) / 10.0) * w_act
+                if u_prog > 0.02:
+                    tw = math.ceil(f_use.getlength(pt["label"]))
+                    if side == "left":
+                        draw.line((tx - tw * u_prog, cy + 28, tx, cy + 28), fill=(*accent, round(190 * w_act)), width=3)
+                    else:
+                        draw.line((tx, cy + 28, tx + tw * u_prog, cy + 28), fill=(*accent, round(190 * w_act)), width=3)
+
+    im.paste(layer, (0, 0), layer)
+
+
 def filename(manifest, mode):
     return f"{manifest['name']}-{manifest['area_m2']:g} m²-{MODES[mode]}-4K.mp4"
 
@@ -295,9 +476,14 @@ def render(case, mode, brand_path=BRAND, original=None, output=None):
         for start in starts:
             changes.update(range(start + 15, start + 24))
             changes.update(range(start + 111, start + 121))
+    points = plan_points_for(manifest)
+    p_rect = plan_rect(case, manifest) if points else None
+    p_acts = plan_activations(points, timeline, cuts[1], cuts[2], narr) if points else []
     moving = {i for i in range(2, len(shots)) if len(shots[i]["image_ids"]) == 1}
     for i in moving:
         changes.update(range(cuts[i], cuts[i + 1]))
+    if points:
+        changes.update(range(cuts[1], cuts[2]))
     ordered = sorted(x for x in changes if 0 <= x <= total)
     with TemporaryDirectory(dir=out) as tmp:
         work = Path(tmp)
@@ -322,7 +508,10 @@ def render(case, mode, brand_path=BRAND, original=None, output=None):
                 return push(
                     base(i), min(1, elapsed / max(1, cuts[i + 1] - cuts[i] - 1))
                 )
-            return base(i).copy()
+            im = base(i).copy()
+            if i == 1 and points:
+                draw_plan_interaction(im, p_rect, points, p_acts, cuts[1] + elapsed, cuts[1])
+            return im
 
         catalog = ["ffconcat version 1.0"]
         for j, (a, b) in enumerate(zip(ordered, ordered[1:])):

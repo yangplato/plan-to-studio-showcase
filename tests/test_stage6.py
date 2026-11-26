@@ -10,7 +10,18 @@ from PIL import Image, ImageChops
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from build_brochure import THEMES, compose
-from render_video import PAPER, SIZE, board, corner, names, plan_caption_lines, subtitle
+from render_video import (
+    PAPER,
+    SIZE,
+    board,
+    corner,
+    draw_plan_interaction,
+    names,
+    plan_activations,
+    plan_caption_lines,
+    plan_points_for,
+    subtitle,
+)
 
 EXAMPLE = ROOT / "examples/courtyard-105-sample"
 
@@ -127,3 +138,37 @@ class StageSix(unittest.TestCase):
                             fact["room"] for fact in case["facts"] if fact["image_ids"][0] in photos
                         }
                         self.assertEqual(paired_rooms, {rooms[primary]})
+
+    def test_plan_pins_and_video_interaction(self):
+        manifest, script, brand = fixtures()
+        pts = plan_points_for(manifest)
+        self.assertEqual(len(pts), 6)
+        p02 = script["pages"][1]
+        for slug in THEMES:
+            with self.subTest(template=slug):
+                _, nodes = compose(slug, 2, p02, manifest, brand, script)
+                plan_node = next(
+                    n for n in nodes if n["kind"] == "photo" and n["id"] == manifest["color_plan"]
+                )
+                self.assertEqual([p["index"] for p in plan_node["callouts"]], [1, 2, 3, 4, 5, 6])
+                texts = [n["value"] for n in nodes if n["kind"] == "text"]
+                self.assertFalse(any(t.startswith("01") and "玄关厨房" in t for t in texts))
+        timeline = {
+            "subtitles": [
+                {"text": "先一起看整个家，一百零五平方米，三卧一卫。", "start_ms": 15700, "end_ms": 20500},
+                {"text": "厨房出来就是长桌，", "start_ms": 20600, "end_ms": 22600},
+                {"text": "两边各坐三个人，", "start_ms": 22600, "end_ms": 24400},
+                {"text": "再过去就是客厅。", "start_ms": 24400, "end_ms": 26600},
+            ]
+        }
+        acts = plan_activations(pts, timeline, 470, 960, True)
+        self.assertEqual([idx for _, _, idx in acts], [1, 2, 3])
+        base_im = Image.new("RGB", SIZE, PAPER)
+        f_early = base_im.copy()
+        f_mid = base_im.copy()
+        rect = (480, 105, 1360, 1950)
+        draw_plan_interaction(f_early, rect, pts, acts, 520, 470)
+        draw_plan_interaction(f_mid, rect, pts, acts, 740, 470)
+        diff = ImageChops.difference(f_early, f_mid).getbbox()
+        self.assertIsNotNone(diff)
+        self.assertLessEqual(diff[2], 2285)
